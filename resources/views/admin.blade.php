@@ -119,6 +119,7 @@
             padding: 0.75rem 1rem;
         }
     }
+
 </style>
 @endsection
 
@@ -126,11 +127,11 @@
 <div class="container py-4">
     <!-- Admin Navigation -->
     <nav class="admin-nav md:flex items-center space-x-6 hidden" id="adminNav">
-        <a href="#" data-page="dashboard" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'dashboard' ? 'active' : '' }}">Tableau de bord</a>
-        <a href="#" data-page="qr-codes" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'qr-codes' ? 'active' : '' }}">QR Codes</a>
-        <a href="#" data-page="users" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'users' ? 'active' : '' }}">Utilisateurs</a>
-        <a href="#" data-page="balles" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'balles' ? 'active' : '' }}">Balles</a>
-        <a href="#" data-page="reports" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'reports' ? 'active' : '' }}">Rapports</a>
+        <a href="{{ url('/admin?page=dashboard') }}" data-page="dashboard" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'dashboard' ? 'active' : '' }}">Tableau de bord</a>
+        <a href="{{ url('/admin?page=qr-codes') }}" data-page="qr-codes" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'qr-codes' ? 'active' : '' }}">QR Codes</a>
+        <a href="{{ url('/admin?page=users') }}" data-page="users" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'users' ? 'active' : '' }}">Utilisateurs</a>
+        <a href="{{ url('/admin?page=balles') }}" data-page="balles" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'balles' ? 'active' : '' }}">Balles</a>
+        <a href="{{ url('/admin?page=reports') }}" data-page="reports" class="nav-link page-link text-gray-600 hover:text-blue-600 {{ $currentPage === 'reports' ? 'active' : '' }}">Rapports</a>
 
         <!-- User Dropdown -->
         <div class="flex items-center ml-auto">
@@ -274,10 +275,13 @@
                             @forelse ($qrcodes as $qrcode)
                             <tr>
                                 <td class="px-6 py-4">
-                                    @if ($qrcode->qr_data)
-                                        <img src="{{ $qrcode->qr_data }}" alt="QR Code" class="h-16 w-16">
+                                    @php
+                                    $qrCode = App\Models\QrCode::where('reference', $balle->reference)->first();
+                                    @endphp
+                                    @if ($qrCode && $qrCode->qr_data)
+                                    <span class="badge bg-success">Oui</span>
                                     @else
-                                        <span class="text-gray-500">Non généré</span>
+                                    <span class="badge bg-warning">Non généré</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">{{ $qrcode->reference }}</td>
@@ -429,12 +433,12 @@
                                 <td class="px-6 py-4">{{ $balle->qualite ?? 'N/A' }}</td>
                                 <td class="px-6 py-4">
                                     @php
-                                        $qrCode = $qrcodes->firstWhere('reference', $balle->reference);
+                                    $qrCode = $qrcodes->firstWhere('reference', $balle->reference);
                                     @endphp
                                     @if ($qrCode && $qrCode->qr_data)
-                                        <img src="{{ $qrCode->qr_data }}" alt="QR Code" class="h-16 w-16">
+                                    <img src="{{ $qrCode->qr_data }}" alt="QR Code" class="h-16 w-16">
                                     @else
-                                        <span class="text-gray-500">Non généré</span>
+                                    <span class="text-gray-500">Non généré</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4">
@@ -477,24 +481,6 @@
                 <div class="bg-white rounded-lg shadow p-6">
                     <h2 class="text-xl font-semibold text-gray-800 mb-4">Activité des scans</h2>
                     <canvas id="scanActivityChart" height="250"></canvas>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow p-6">
-                <h2 class="text-xl font-semibold text-gray-800 mb-4">Export de données</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button class="bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 flex flex-col items-center">
-                        <i class="fas fa-qrcode text-2xl mb-2"></i>
-                        <span>QR Codes</span>
-                    </button>
-                    <button class="bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 flex flex-col items-center">
-                        <i class="fas fa-boxes text-2xl mb-2"></i>
-                        <span>Balles de coton</span>
-                    </button>
-                    <button class="bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 flex flex-col items-center">
-                        <i class="fas fa-users text-2xl mb-2"></i>
-                        <span>Utilisateurs</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -689,7 +675,7 @@
                 <h3 class="text-xl font-semibold">Ajouter une balle</h3>
             </div>
             <div class="p-4">
-                <form id="addBalleForm" method="POST" action="{{ route('admin.addBalle') }}">
+                <form id="addBalleForm" method="#" action="#">
                     @csrf
                     <div class="space-y-4 mb-4">
                         <div>
@@ -743,50 +729,104 @@
 <script>
     // Initialize charts for reports page
     function initCharts() {
-        const qrGenerationCtx = document.getElementById('qrGenerationChart')?.getContext('2d');
-        if (qrGenerationCtx) {
-            new Chart(qrGenerationCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
-                    datasets: [{
-                        label: 'QR Codes générés',
-                        data: [10, 20, 15, 25, 30, 35],
-                        borderColor: '#3498db',
-                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
-                        fill: true
+        // Graphique de génération de QR Codes
+        const qrGenerationCtx = document.getElementById('qrGenerationChart').getContext('2d');
+        const qrGenerationChart = new Chart(qrGenerationCtx, {
+            type: 'bar'
+            , data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+                , datasets: [{
+                    label: 'QR Codes générés'
+                    , data: [10, 20, 15, 25, 30, 35, 40, 45, 50, 55, 60, 65], // Remplacer par vos données réelles
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                    , borderColor: 'rgba(54, 162, 235, 1)'
+                    , borderWidth: 1
+                }]
+            }
+            , options: {
+                responsive: true
+                , scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Graphique d'activité des scans
+        const scanActivityCtx = document.getElementById('scanActivityChart').getContext('2d');
+        const scanActivityChart = new Chart(scanActivityCtx, {
+            type: 'line'
+            , data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+                , datasets: [{
+                    label: 'Scans effectués'
+                    , data: [50, 70, 60, 80, 90, 100, 110, 120, 130, 140, 150, 160], // Remplacer par vos données réelles
+                    fill: false
+                    , backgroundColor: 'rgba(75, 192, 192, 0.5)'
+                    , borderColor: 'rgba(75, 192, 192, 1)'
+                    , tension: 0.1
+                }]
+            }
+            , options: {
+                responsive: true
+                , scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        async function initCharts() {
+            // Récupérer les données depuis l'API
+            const response = await fetch('/api/chart-data');
+            const data = await response.json();
+
+            // Graphique de génération de QR Codes
+            const qrGenerationCtx = document.getElementById('qrGenerationChart').getContext('2d');
+            const qrGenerationChart = new Chart(qrGenerationCtx, {
+                type: 'bar'
+                , data: {
+                    labels: data.qr_generation.labels
+                    , datasets: [{
+                        label: 'QR Codes générés'
+                        , data: data.qr_generation.data
+                        , backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                        , borderColor: 'rgba(54, 162, 235, 1)'
+                        , borderWidth: 1
                     }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
+                }
+                , options: {
+                    responsive: true
+                    , scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
             });
-        }
 
-        const scanActivityCtx = document.getElementById('scanActivityChart')?.getContext('2d');
-        if (scanActivityCtx) {
-            new Chart(scanActivityCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'],
-                    datasets: [{
-                        label: 'Scans effectués',
-                        data: [50, 70, 60, 80, 90, 100],
-                        backgroundColor: 'rgba(46, 204, 113, 0.7)',
-                        borderColor: 'rgba(46, 204, 113, 1)',
-                        borderWidth: 1
+            // Graphique d'activité des scans
+            const scanActivityCtx = document.getElementById('scanActivityChart').getContext('2d');
+            const scanActivityChart = new Chart(scanActivityCtx, {
+                type: 'line'
+                , data: {
+                    labels: data.scan_activity.labels
+                    , datasets: [{
+                        label: 'Scans effectués'
+                        , data: data.scan_activity.data
+                        , fill: false
+                        , backgroundColor: 'rgba(75, 192, 192, 0.5)'
+                        , borderColor: 'rgba(75, 192, 192, 1)'
+                        , tension: 0.1
                     }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
+                }
+                , options: {
+                    responsive: true
+                    , scales: {
+                        y: {
+                            beginAtZero: true
+                        }
                     }
                 }
             });
@@ -814,6 +854,7 @@
 
     // Confirm delete
     let deleteId = null;
+
     function confirmDelete(id) {
         deleteId = id;
         document.getElementById('confirmationMessage').textContent = 'Êtes-vous sûr de vouloir supprimer cet élément ?';
@@ -829,25 +870,55 @@
         });
     });
 
-    function switchPage(page) {
+    function switchPage(page, pushState = true) {
+        // Masquer tous les contenus de page
         document.querySelectorAll('.page-content').forEach(content => {
             content.classList.remove('active');
         });
+
+        // Afficher la page demandée
         document.getElementById(page).classList.add('active');
 
+        // Mettre à jour le lien actif
         document.querySelectorAll('.page-link').forEach(link => {
             link.classList.remove('active');
         });
         document.querySelector(`.page-link[data-page="${page}"]`).classList.add('active');
 
-        // Update URL without reloading
-        history.pushState({}, '', `?page=${page}`);
+        // Mettre à jour l'URL si nécessaire
+        if (pushState) {
+            history.pushState({
+                page
+            }, '', `?page=${page}`);
+        }
 
-        // Initialize charts for reports page
+        // Initialiser les graphiques si nécessaire
         if (page === 'reports') {
             initCharts();
         }
     }
+
+    // Gestion du clic sur les liens
+    document.querySelectorAll('.page-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const page = link.getAttribute('data-page');
+            switchPage(page);
+        });
+    });
+
+    // Gestion du chargement initial
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || 'dashboard';
+        switchPage(page, false); // Ne pas pousser un nouvel état dans l'historique
+    });
+
+    // Gestion du bouton retour/avant
+    window.addEventListener('popstate', (event) => {
+        const page = event.state ? .page || 'dashboard';
+        switchPage(page, false);
+    });
 
     // Mobile menu toggle
     document.getElementById('mobileMenuButton').addEventListener('click', () => {
@@ -861,7 +932,7 @@
     });
 
     // Mobile user dropdown toggle
-    document.getElementById('mobileUserMenuButton')?.addEventListener('click', () => {
+    document.getElementById('mobileUserMenuButton') ? .addEventListener('click', () => {
         document.getElementById('userDropdown').classList.toggle('hidden');
     });
 
@@ -870,7 +941,7 @@
         const dropdown = document.getElementById('userDropdown');
         const userButton = document.getElementById('userMenuButton');
         const mobileUserButton = document.getElementById('mobileUserMenuButton');
-        if (!userButton.contains(e.target) && !mobileUserButton?.contains(e.target) && !dropdown.contains(e.target)) {
+        if (!userButton.contains(e.target) && !mobileUserButton ? .contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.classList.add('hidden');
         }
     });
@@ -888,19 +959,21 @@
         qrCell.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span>';
 
         fetch('{{ route("admin.qrcode.generate") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({ reference: reference })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                qrCell.innerHTML = `<img src="${data.qr_data}" alt="QR Code" style="height: 100px;">`;
-                const actionCell = document.querySelector(`#row-${id} td:last-child div`);
-                actionCell.innerHTML = `
+                method: 'POST'
+                , headers: {
+                    'Content-Type': 'application/json'
+                    , 'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+                , body: JSON.stringify({
+                    reference: reference
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    qrCell.innerHTML = `<img src="${data.qr_data}" alt="QR Code" style="height: 100px;">`;
+                    const actionCell = document.querySelector(`#row-${id} td:last-child div`);
+                    actionCell.innerHTML = `
                     <button class="btn btn-sm btn-success me-2" onclick="saveQRCodeToDB('${id}', '${reference}', '${data.qr_data}')" title="Enregistrer">
                         <i class="fas fa-save"></i>
                     </button>
@@ -908,18 +981,18 @@
                         <i class="fas fa-print"></i>
                     </button>
                 `;
-                alert("QR Code généré avec succès !");
-            } else {
-                throw new Error(data.message || "Erreur lors de la génération");
-            }
-        })
-        .then(() => {
-            saveQRCodeToDB(id, reference, qrCell.querySelector('img').src);
-        })
-        .catch(error => {
-            qrCell.innerHTML = '<span class="badge bg-danger">Erreur</span>';
-            alert("Erreur: " + error.message);
-        });
+                    alert("QR Code généré avec succès !");
+                } else {
+                    throw new Error(data.message || "Erreur lors de la génération");
+                }
+            })
+            .then(() => {
+                saveQRCodeToDB(id, reference, qrCell.querySelector('img').src);
+            })
+            .catch(error => {
+                qrCell.innerHTML = '<span class="badge bg-danger">Erreur</span>';
+                alert("Erreur: " + error.message);
+            });
     }
 
     function saveQRCodeToDB(id, reference, qrData) {
@@ -930,31 +1003,31 @@
         saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
 
         fetch('{{ route("admin.qrcode.save") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                reference: reference,
-                qrData: qrData
+                method: 'POST'
+                , headers: {
+                    'Content-Type': 'application/json'
+                    , 'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+                , body: JSON.stringify({
+                    reference: reference
+                    , qrData: qrData
+                })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert("QR Code enregistré avec succès !");
-            } else {
-                throw new Error(data.message || "Erreur lors de l'enregistrement");
-            }
-        })
-        .catch(error => {
-            alert("Erreur: " + error.message);
-        })
-        .finally(() => {
-            saveBtn.disabled = false;
-            saveBtn.innerHTML = originalHtml;
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("QR Code enregistré avec succès !");
+                } else {
+                    throw new Error(data.message || "Erreur lors de l'enregistrement");
+                }
+            })
+            .catch(error => {
+                alert("Erreur: " + error.message);
+            })
+            .finally(() => {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalHtml;
+            });
     }
 
     function printSingleQR(reference, url) {
@@ -983,5 +1056,51 @@
             printWindow.close();
         }, 500);
     }
+
+    // Recherche dans la page QR Codes
+    document.getElementById('searchQrInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#qrCodesTableBody tr');
+
+        rows.forEach(row => {
+            const reference = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+            if (reference.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Recherche dans la page Utilisateurs
+    document.getElementById('searchUserInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#usersTableBody tr');
+
+        rows.forEach(row => {
+            const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            if (name.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Recherche dans la page Balles
+    document.getElementById('searchBalleInput').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#ballesTableBody tr');
+
+        rows.forEach(row => {
+            const reference = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+            if (reference.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
 </script>
 @endsection

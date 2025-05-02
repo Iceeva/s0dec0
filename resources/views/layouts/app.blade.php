@@ -694,7 +694,7 @@
                     <ul class="space-y-2">
                         <li><a href="#" class="text-gray-400 hover:text-white">Accueil</a></li>
                         <li><a href="login" class="text-gray-400 hover:text-white">Connexion</a></li>
-                        <li><a href="gener_qr_code" class="text-gray-400 hover:text-white">Générer QR Code</a></li>
+                        <li><a href="qrcode_manager" class="text-gray-400 hover:text-white">Générer QR Code</a></li>
                         {{-- <li><a href="admin" class="text-gray-400 hover:text-white">Espace Admin</a></li> --}}
                     </ul>
                 </div>
@@ -985,6 +985,29 @@
                 document.getElementById('search-reference-btn').click();
             }
         });
+
+        // Dans la fonction qui gère le scan
+        function handleScan(result) {
+            // Enregistrer le scan dans la base de données
+            fetch('/api/record-scan', {
+                    method: 'POST'
+                    , headers: {
+                        'Content-Type': 'application/json'
+                        , 'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                    , body: JSON.stringify({
+                        qr_code: result
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Afficher les informations du scan
+                    displayQrInfo(data);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
 
     </script>
     <!-- gener_qr_code -->

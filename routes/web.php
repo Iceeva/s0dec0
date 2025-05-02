@@ -10,6 +10,8 @@ use App\Http\Controllers\BalleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ScanController;
+use App\Http\Controllers\ChartController;
 
 require __DIR__.'/auth.php';
 
@@ -21,6 +23,12 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::post('/json-reception', [TestController::class, 'store']);
 
 // Admin routes
+Route::get('/admin', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
+Route::post('/admin/qrcode/generate', [AdminController::class, 'generateQrCode'])->name('admin.qrcode.generate');
+Route::post('/admin/users/add', [AdminController::class, 'addUser'])->name('admin.addUser');
+Route::put('/admin/users/update', [AdminController::class, 'updateUser'])->name('admin.updateUser');
+Route::post('/admin/qrcode/save', [AdminController::class, 'saveQrCode'])->name('admin.qrcode.save');
+
 
 // Profile routes
 Route::middleware(['auth'])->group(function () {
@@ -32,8 +40,6 @@ Route::middleware(['auth'])->group(function () {
 
 // Authentication routes
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
-
-Route::get('/admin', [App\Http\Controllers\AdminController::class, 'dashboard'])->name('admin.dashboard');
 
 Route::prefix('qr-codes')->group(function () {
     Route::get('/', [QrCodeController::class, 'index'])->name('qr-codes.index');
@@ -66,6 +72,8 @@ Route::post('/balles', [BalleController::class, 'store'])->name('balles.store');
 Route::get('/balle/{reference}', [BalleController::class, 'getBalle']);
 Route::get('/balle/{reference}', [BalleController::class, 'getBalleByReference']);
 
+Route::get('/api/chart-data', [ChartController::class, 'getChartData']);
+Route::post('/api/record-scan', [ScanController::class, 'recordScan']);
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Routes protégées nécessitant une vérification d'email

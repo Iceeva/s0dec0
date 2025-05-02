@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use SimpleSoftwareIO\QrCode\Facades\QrCode as QrCodeGenerator;
+use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Routing\Controller;
 
@@ -28,7 +29,7 @@ class AdminController extends Controller
         $agentCount = User::where('role', 'agent')->count();
         $buyerCount = User::where('role', 'buyer')->count();
         $ballesCount = $balles->count();
-        $currentPage = $request->query('page', 'dashboard');
+        $currentPage = $request->query('page', 'dashboard'); // Récupère le paramètre page ou 'dashboard' par défaut
 
         return view('admin', compact(
             'users',
@@ -111,6 +112,33 @@ class AdminController extends Controller
         }
     }
 
+    // public function addUser(Request $request)
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'name' => 'required|string|max:255',
+    //         'email' => 'required|string|email|max:255|unique:users',
+    //         'role' => 'required|string|in:admin,agent,buyer',
+    //         'password' => 'required|string|min:8|confirmed',
+    //     ]);
+
+    //     if ($validator->fails()) {
+    //         return back()->withErrors($validator)->withInput();
+    //     }
+
+    //     try {
+    //         User::create([
+    //             'name' => $request->input('name'),
+    //             'email' => $request->input('email'),
+    //             'role' => $request->input('role'),
+    //             'password' => Hash::make($request->input('password')),
+    //         ]);
+
+    //         return redirect()->route('admin.dashboard', ['page' => 'users'])
+    //             ->with('success', 'Utilisateur ajouté avec succès.');
+    //     } catch (\Exception $e) {
+    //         return back()->with('error', 'Erreur lors de l\'ajout de l\'utilisateur: ' . $e->getMessage());
+    //     }
+    // }
     public function addUser(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -125,6 +153,11 @@ class AdminController extends Controller
         }
 
         try {
+            // Vérifier que seul un admin peut créer d'autres admins
+            if ($request->role === 'admin' && Auth::user()->role !== 'admin') {
+                return back()->with('error', 'Seuls les administrateurs peuvent créer d\'autres administrateurs');
+            }
+
             User::create([
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),

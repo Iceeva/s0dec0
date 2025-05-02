@@ -220,37 +220,58 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">Variété*</label>
-                            <input type="text" name="variete" class="form-control" required>
+                            <select name="variete" class="form-select">
+                                <option value="">Sélectionner</option>
+                                <option value="ANG 956">ANG 956</option>
+                                <option value="H279 ( COTON BIO )">H279 ( COTON BIO )</option>
+                                <option value="BIO">BIO</option>
+                                <option value="R-663-4">R-663-4</option>
+                                <option value="OKP 768">OKP 768</option>
+                                <option value="KET 782">KET 782</option>
+                                <option value="CMIA">CMIA</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Usine*</label>
-                            <input type="text" name="usine" class="form-control" required>
+                            <select name="usine" class="form-select">
+                                <option value="">Sélectionner</option>
+                                <option value="KANDI 1">KANDI 1</option>
+                                <option value="KANDI 2">KANDI 2</option>
+                                <option value="KANDI 3">KANDI 3</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Marquage</label>
-                            <input type="text" name="marquage" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Longueur de soie</label>
-                            <input type="text" name="longueur_soie" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Type de vente</label>
-                            <select name="type_vente" class="form-select">
-                                <option value="KABA">KABA</option>
-                                <option value="">/..</option>
-                                <option value="">/..</option>
+                            <label class="form-label">Marquage*</label>
+                            <select name="marquage" class="form-select">
+                                <option value="">Sélectionner</option>
+                                <option value="KEGA">KEGA</option>
+                                <option value="KEFA">KEFA</option>
+                                <option value="KEDA">KEDA</option>
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label">Est classé</label>
+                            <label class="form-label">Longueur de soie*</label>
+                            <input type="text" name="longueur_soie" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Type de vente*</label>
+                            <select name="type_vente" class="form-select">
+                                <option value="">Sélectionner</option>
+                                <option value="KABA">KABA</option>
+                                <option value="BELA">BELA</option>
+                                <option value="ZANA">ZANA</option>
+                                <option value="ZANA/T">ZANA/T</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Est classé*</label>
                             <select name="est_classe" class="form-select">
                                 <option value="0">Non</option>
                                 <option value="1">Oui</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Date de classement</label>
+                            <label class="form-label">Date de classement*</label>
                             <input type="date" name="date_classement" class="form-control">
                         </div>
                         <div class="col-12">
@@ -474,9 +495,9 @@
         document.getElementById('generateSelected').addEventListener('click', function() {
             const selected = document.querySelectorAll('.selectRow:checked');
             //if (selected.length === 0) {
-                //alert('Veuillez sélectionner au moins une balle');
-                //return;
-           // }
+            //alert('Veuillez sélectionner au moins une balle');
+            //return;
+            // }
 
             const form = document.getElementById('ballForm');
             const data = new FormData(form);

@@ -4,6 +4,43 @@
 
 @section('styles')
 <style>
+    /* Dans votre section styles */
+    .fixed.inset-0 {
+        backdrop-filter: blur(2px);
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        line-height: 1;
+    }
+
+    .bg-green-100 {
+        background-color: #d1fae5;
+    }
+
+    .text-green-800 {
+        color: #065f46;
+    }
+
+    .bg-yellow-100 {
+        background-color: #fef3c7;
+    }
+
+    .text-yellow-800 {
+        color: #92400e;
+    }
+
+    /* Empêcher le défilement quand un modal est ouvert */
+    body.overflow-hidden {
+        overflow: hidden;
+    }
+
     /* Existing styles */
     .sidebar {
         transition: all 0.3s ease;
@@ -433,7 +470,7 @@
                                 <td class="px-6 py-4">{{ $balle->qualite ?? 'N/A' }}</td>
                                 <td class="px-6 py-4">
                                     @php
-                                    $qrCode = $qrcodes->firstWhere('reference', $balle->reference);
+                                    $qrCode = App\Models\QrCode::where('reference', $balle->reference)->first();
                                     @endphp
                                     @if ($qrCode && $qrCode->qr_data)
                                     <img src="{{ $qrCode->qr_data }}" alt="QR Code" class="h-16 w-16">
@@ -591,30 +628,38 @@
         <div class="bg-white rounded-lg w-full max-w-md">
             <div class="p-4 border-b">
                 <h3 class="text-xl font-semibold">Ajouter un utilisateur</h3>
+                <button onclick="hideModal('addUserModal')" class="float-right text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="p-4">
                 <form id="addUserForm" method="POST" action="{{ route('admin.addUser') }}">
                     @csrf
                     <div class="space-y-4 mb-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nom complet*</label>
                             <input type="text" name="name" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email*</label>
                             <input type="email" name="email" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Rôle</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Rôle*</label>
                             <select name="role" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">Sélectionner un rôle</option>
                                 <option value="admin">Admin</option>
                                 <option value="agent">Agent</option>
                                 <option value="buyer">Acheteur</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Mot de passe*</label>
                             <input type="password" name="password" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Confirmer le mot de passe*</label>
+                            <input type="password" name="password_confirmation" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
                     <div class="flex justify-end space-x-3">
@@ -727,6 +772,76 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
+    function initCharts() {
+        // Graphique de génération de QR Codes
+        const qrGenerationCtx = document.getElementById('qrGenerationChart').getContext('2d');
+        new Chart(qrGenerationCtx, {
+            type: 'bar'
+            , data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+                , datasets: [{
+                    label: 'QR Codes générés'
+                    , data: [12, 19, 15, 27, 34, 42, 38, 45, 51, 47, 55, 60]
+                    , backgroundColor: 'rgba(54, 162, 235, 0.5)'
+                    , borderColor: 'rgba(54, 162, 235, 1)'
+                    , borderWidth: 1
+                }]
+            }
+            , options: {
+                responsive: true
+                , scales: {
+                    y: {
+                        beginAtZero: true
+                        , title: {
+                            display: true
+                            , text: 'Nombre de QR Codes'
+                        }
+                    }
+                    , x: {
+                        title: {
+                            display: true
+                            , text: 'Mois'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Graphique d'activité des scans
+        const scanActivityCtx = document.getElementById('scanActivityChart').getContext('2d');
+        new Chart(scanActivityCtx, {
+            type: 'line'
+            , data: {
+                labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+                , datasets: [{
+                    label: 'Scans effectués'
+                    , data: [50, 75, 60, 85, 95, 105, 110, 125, 130, 140, 155, 170]
+                    , fill: false
+                    , backgroundColor: 'rgba(75, 192, 192, 0.5)'
+                    , borderColor: 'rgba(75, 192, 192, 1)'
+                    , tension: 0.1
+                }]
+            }
+            , options: {
+                responsive: true
+                , scales: {
+                    y: {
+                        beginAtZero: true
+                        , title: {
+                            display: true
+                            , text: 'Nombre de scans'
+                        }
+                    }
+                    , x: {
+                        title: {
+                            display: true
+                            , text: 'Mois'
+                        }
+                    }
+                }
+            }
+        });
+    }
     // Initialize charts for reports page
     function initCharts() {
         // Graphique de génération de QR Codes
@@ -1064,11 +1179,7 @@
 
         rows.forEach(row => {
             const reference = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-            if (reference.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            row.style.display = reference.includes(searchTerm) ? '' : 'none';
         });
     });
 
@@ -1079,11 +1190,7 @@
 
         rows.forEach(row => {
             const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-            if (name.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+            row.style.display = name.includes(searchTerm) ? '' : 'none';
         });
     });
 
@@ -1094,10 +1201,26 @@
 
         rows.forEach(row => {
             const reference = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
-            if (reference.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
+            row.style.display = reference.includes(searchTerm) ? '' : 'none';
+        });
+    });
+
+    // Gestion des modaux
+    function showModal(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function hideModal(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    // Fermer les modals en cliquant à l'extérieur
+    document.querySelectorAll('.fixed.inset-0').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideModal(this.id);
             }
         });
     });

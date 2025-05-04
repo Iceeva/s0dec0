@@ -60,6 +60,7 @@ Route::post('/expedition', [ExpeditionController::class, 'create'])->name('exped
 Route::put('/expedition/{id}/status', [ExpeditionController::class, 'updateStatus'])->name('expedition.update-status');
 Route::get('/expedition/{id}', [ExpeditionController::class, 'show'])->name('expedition.show');
 Route::delete('/expedition/{id}', [ExpeditionController::class, 'destroy'])->name('expedition.delete');
+Route::get('/dashboard', function () {return view('expedition');})->name('dashboard');
 
 // Balles
 Route::post('/balles', [BalleController::class, 'store'])->name('balles.store');
